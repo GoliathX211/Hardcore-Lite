@@ -1,4 +1,4 @@
-package ChangeThisName.registry;
+package HardcoreLite.registry;
 
 import necesse.gfx.gameTexture.GameTexture;
 

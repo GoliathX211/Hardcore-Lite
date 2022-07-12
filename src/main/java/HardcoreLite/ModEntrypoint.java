@@ -1,6 +1,6 @@
-package ChangeThisName;
+package HardcoreLite;
 
-import ChangeThisName.registry.*;
+import HardcoreLite.registry.*;
 import necesse.engine.modLoader.annotations.ModEntry;
 
 /**

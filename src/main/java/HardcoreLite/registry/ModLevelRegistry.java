@@ -1,4 +1,4 @@
-package ChangeThisName.registry;
+package HardcoreLite.registry;
 
 public class ModLevelRegistry {
     public static void RegisterAll() {

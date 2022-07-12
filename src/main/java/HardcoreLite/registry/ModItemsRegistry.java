@@ -1,6 +1,6 @@
-package ChangeThisName.registry;
+package HardcoreLite.registry;
 
-public class ModQuestRegistry {
+public class ModItemsRegistry {
     public static void RegisterAll() {
         /* Register everything here! */
     }

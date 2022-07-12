@@ -9,7 +9,7 @@ You can find [community documentation and guides here](https://necesse-community
 You can find [the official WIKI page here](https://necessewiki.com/Modding)
 
 # Setup Info
-1. Make sure you rename `ChangeThisName` to a unique name for your mod. If not, you will conflict with other mods using this starter
+1. Make sure you rename `HardcoreLite` to a unique name for your mod. If not, you will conflict with other mods using this starter
 2. Rename the project in `settings.gradle`
 3. Update the `mod info`  in `build.gradle
 4. Change the `build.gradle` gameDirectory to your Necesse game directory
