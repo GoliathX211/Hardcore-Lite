@@ -10,28 +10,13 @@ import necesse.engine.modLoader.annotations.ModEntry;
 public class ModEntrypoint {
 
     public void init() {
-        ModTileRegistry.RegisterAll();
-        ModObjectRegistry.RegisterAll();
-        ModBiomeRegistry.RegisterAll();
-        ModBuffRegistry.RegisterAll();
-        ModItemsRegistry.RegisterAll();
-        ModMobsRegistry.RegisterAll();
-        ModLevelRegistry.RegisterAll();
-        ModContainerRegistry.RegisterAll();
         ModPacketRegistry.RegisterAll();
-        ModQuestRegistry.RegisterAll();
     }
 
     // Load resources such as textures and music.
     public void initResources() {
-        ModTextureRegistry.RegisterAll();
     }
 
-    public void postInit() {
-        ModRecipeRegistry.RegisterAll();
-        ModMobsRegistry.RegisterBiomes();
-
-        ModCommandsRegistry.RegisterAll();
-    }
+    public void postInit() {}
 
 }

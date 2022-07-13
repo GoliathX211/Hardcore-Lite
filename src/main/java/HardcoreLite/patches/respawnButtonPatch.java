@@ -1,41 +1,25 @@
 package HardcoreLite.patches;
 
-import com.codedisaster.steamworks.SteamUser;
+import HardcoreLite.packets.PacketPlayerDeleteRequest;
 import necesse.engine.GameDeathPenalty;
-import necesse.engine.commands.serverCommands.DeletePlayerServerCommand;
+import necesse.engine.GameLog;
 import necesse.engine.modLoader.annotations.ModMethodPatch;
 import necesse.engine.network.client.Client;
 import necesse.engine.network.packet.PacketPlayerRespawnRequest;
 import necesse.engine.state.MainGame;
-import necesse.engine.steam.SteamData;
 import necesse.gfx.forms.MainGameFormManager;
 import necesse.gfx.forms.components.FormButton;
 import necesse.gfx.forms.components.localComponents.FormLocalTextButton;
 import necesse.gfx.forms.events.FormEventListener;
+import necesse.gfx.forms.events.FormEventsHandler;
 import necesse.gfx.forms.events.FormInputEvent;
 import net.bytebuddy.asm.Advice;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.function.Consumer;
 
 @ModMethodPatch(target = MainGameFormManager.class, name = "setup", arguments = {})
 public class respawnButtonPatch {
-    static final Class formManagerClass = MainGameFormManager.class;
-    static final Field cooldown;
 
-    static {
-        try {
-            cooldown = formManagerClass.getDeclaredField("respawnButton");
-            cooldown.setAccessible(true);
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    
-    
     @Advice.OnMethodExit()
     public static void onExit(
             @Advice.This MainGameFormManager formManager,
@@ -43,38 +27,37 @@ public class respawnButtonPatch {
             @Advice.FieldValue("client") Client client,
             @Advice.FieldValue("mainGame") MainGame mainGame
 
-    ) {
+    ) throws IllegalAccessException, NoSuchFieldException {
+        Class button = FormButton.class;
+        Field clickedEventsField;
+
+        clickedEventsField = button.getDeclaredField("clickedEvents");
+        clickedEventsField.setAccessible(true);
 
 
+        FormEventsHandler<FormInputEvent<FormButton>> clickedEvents = (FormEventsHandler<FormInputEvent<FormButton>>) clickedEventsField.get(respawnButton);
+        clickedEvents.clearListeners();
+        GameLog.debug.println("Cleared listeners.");
 
-        respawnButton.onClicked(onClickMethod(formManager, client));
+        respawnButton.onClicked(listenerMethod(client, formManager, mainGame));
     }
 
-    public static FormEventListener<FormInputEvent<FormButton>> onClickMethod(MainGameFormManager formManager, Client client) {
+    public static FormEventListener<FormInputEvent<FormButton>> listenerMethod(Client client, MainGameFormManager formManager, MainGame mainGame) {
         return (e) -> {
+            GameLog.debug.println("Event clicked.");
+
+            Class formManagerClass = MainGameFormManager.class;
+            Field cooldown;
+            try {
+                cooldown = formManagerClass.getDeclaredField("respawnButtonCD");
+                cooldown.setAccessible(true);
+            } catch (NoSuchFieldException ex) {
+                throw new RuntimeException(ex);
+            }
+
 
             if (client.worldSettings.deathPenalty == GameDeathPenalty.HARDCORE) {
-                // mainGame.disconnect("Quit");
-
-                if (client.worldEntity == null) {
-                    System.out.println("worldEntity is empty");
-                    return;
-                }
-                if (client.worldEntity.serverWorld == null) {
-                    System.out.println("serverWorld is empty");
-                    return;
-                }
-                if (client.worldEntity.serverWorld.fileSystem == null) {
-                    System.out.println("fileSystem is empty");
-                    return;
-                }
-
-                try {
-                    client.worldEntity.serverWorld.fileSystem.getPlayerFile(client.getClient().authentication).delete();
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-
+                client.network.sendPacket(new PacketPlayerDeleteRequest());
             } else {
                 client.network.sendPacket(new PacketPlayerRespawnRequest());
             }
@@ -84,7 +67,6 @@ public class respawnButtonPatch {
             } catch (IllegalAccessException ex) {
                 throw new RuntimeException(ex);
             }
-
         };
     }
 }

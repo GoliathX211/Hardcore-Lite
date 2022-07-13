@@ -1,7 +1,0 @@
-package HardcoreLite.registry;
-
-public class ModItemsRegistry {
-    public static void RegisterAll() {
-        /* Register everything here! */
-    }
-}
