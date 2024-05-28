@@ -24,7 +24,7 @@ import net.bytebuddy.asm.Advice.This;
    name = "setup",
    arguments = {}
 )
-public class respawnButtonPatch {
+public class RespawnButtonPatch {
    @OnMethodExit
    public static void onExit(
       @This MainGameFormManager formManager,

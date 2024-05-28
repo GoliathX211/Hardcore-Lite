@@ -1,22 +1,17 @@
 package HardcoreLite;
 
-import HardcoreLite.registry.*;
+import HardcoreLite.registry.ModPacketRegistry;
 import necesse.engine.modLoader.annotations.ModEntry;
 
-/**
- *  Entry point for your mod, you should rarely have to do anything in here. All registrations are setup in /registry
- */
 @ModEntry
 public class ModEntrypoint {
+   public void init() {
+      ModPacketRegistry.RegisterAll();
+   }
 
-    public void init() {
-        ModPacketRegistry.RegisterAll();
-    }
+   public void initResources() {
+   }
 
-    // Load resources such as textures and music.
-    public void initResources() {
-    }
-
-    public void postInit() {}
-
+   public void postInit() {
+   }
 }
