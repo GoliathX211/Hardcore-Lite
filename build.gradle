@@ -2,213 +2,174 @@ plugins {
     id 'java'
 }
 
-// ===== Mod Info ===== //
+// Change the values below this to your mods values
+// To change the project name, edit the settings.gradle file
 
-// USER TODO: Make sure to change the project name by editing the settings.gradle file
-def modInfo = [
-    modID          : "goliath.hardcorelite",
-    modName        : "Hardcore Lite",
-    modVersion     : "1.00",
-    gameVersion    : "0.21.23",
-    modDescription : "Adds a new death penalty.",
-    author         : "GoliathX211; Deadly990",
-    clientside     : false,
-    modDependencies         : [],
-    modOptionalDependencies : [],
-]
+project.ext.modID = "goliath.hardcorelite" // The unique id of your mod. Must be all lowercase and cannot use special characters.
+project.ext.modName = "Hardcore Lite" // The display name of your mod.
+project.ext.modVersion = "1.1" // Your current builds version. Must follow the xx.xx... format.
+project.ext.gameVersion = "0.25.0" // The target game version.
+project.ext.modDescription = "Adds a new death penalty." // Short description of what your mod is.
+project.ext.author = "GoliathX211; Deadly990; butterflysky" // Your name
 
-// Set this to your game's directory
-String gameDirectory = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Necesse"
+/**
+ * When setting clientside to true, it means servers do not need this mod for clients to connect and vice versa.
+ * IMPORTANT: If you set this to true, make sure that your mod does not add any content or do anything
+ * that could cause clients and servers to desync. This includes registering any items, objects, tiles, packets etc.
+ */
+project.ext.clientside = false
 
-// If set to true, the decompiled source jar will be referred to by the IDE.
-// Set to false to disable full decompile, here or as a gradle parameter -PuseDecompiledSources=false
-def useDecompiledSources = true
+/**
+ * The other mod dependencies of this mod
+ * Dependencies define the default load order of mods
+ * Uncomment and configure these if your mod has dependencies
+ */
+//project.ext.modDependencies = ["other.modid1", "other.modid2"]
+//project.ext.modOptionalDependencies = ["optional.modid1", "optional.modid2"]
 
+// The path to the games install directory
+def gameDirectory = System.getProperty("game.path", System.getenv("HOME") + "/.local/share/Steam/steamapps/common/Necesse")
 
+// =================================================
+// ========== DO NOT EDIT BELOW THIS LINE ==========
+// =================================================
 
-// ===== Dependencies ===== //
+// Name of the jar
+def jarName = "${project.ext.modName.replace(" ", "")}-${project.ext.gameVersion}-${project.ext.modVersion}"
+
+group project.ext.modID
+version project.ext.modVersion
+
+setSourceCompatibility(JavaVersion.VERSION_1_8)
+setTargetCompatibility(JavaVersion.VERSION_1_8)
 
 repositories {
     mavenCentral()
-    // for the decompiler plugin
-    maven { url "https://www.jetbrains.com/intellij-repository/releases" }
-}
-
-dependencies {
-    // Other dependencies here. `implementation` dependencies will get packaged within the jar.
-    // implementation 'org.apache.commons:commons-lang3:3.12.0'
-}
-
-
-
-// ===== Main Dependencies ===== //
-
-// Check if gameDirectory is correct
-if (!file("$gameDirectory/Necesse.jar").exists()) {
-    throw new Exception("Could not find game install directory. Make sure it is correct in the build.gradle file.")
-}
-
-def decompileDir = "$gameDirectory/decompiled"
-if (project.hasProperty('useDecompiledSources')) {
-    useDecompiledSources = project.property('useDecompiledSources') != 'false'
 }
 
 configurations {
-    runnable {
-        description "For runnable JARs to be ran only on building."
+    libDepends
+}
+
+def jarBuildLocation = "build/jar"
+def modBuildLocation = "build/mod"
+
+sourceSets {
+    main {
+        java {
+            srcDir "src/main/java"
+            destinationDirectory.set(file(modBuildLocation))
+        }
+        resources {
+            srcDir "src/main/resources"
+            output.resourcesDir = file(modBuildLocation + "/resources")
+        }
+        compileClasspath += configurations.libDepends
     }
-    baseGameDep {
-        description "Necesse.jar, either the base game jar, or decompiled sources. Will be added to compile classpath."
-    }
+}
+
+
+
+compileJava.options.encoding = "UTF-8"
+processResources.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+if (!file(gameDirectory + "/Necesse.jar").exists()) {
+    throw new Exception("Could not find game install directory. Make sure it is correct in build.gradle file.")
 }
 
 dependencies {
-    // Compile-time dependencies. `compileOnly` dependencies are needed for compiling and IDE indexing.
-    compileOnly files("$gameDirectory/Necesse.jar")
-    compileOnly fileTree("$gameDirectory/lib/")
-    compileOnly fileTree("./mods/")
-    if (useDecompiledSources && file("$decompileDir/Necesse-sources.jar").exists()) {
-        compileOnly files("$decompileDir/Necesse-sources.jar")
-    } else if (useDecompiledSources) {
-        logger.error("useDecompiledSources is set but is not using decompiled sources.")
-        logger.error("Run the `decompileToSources` Gradle task to do so. ")
-    }
+    implementation files(gameDirectory + "/Necesse.jar")
+    implementation fileTree(gameDirectory + "/lib/")
+    implementation fileTree("./mods/") // Add all mods located in local mods folder
 
-    // Decompiler to produce decompiled game sources, so that IDE features like Find Usages can work nicely.
-    runnable 'com.jetbrains.intellij.java:java-decompiler-engine:221.5921.22'
+    // Add any third party library dependencies here. Remember to use libDepends, so that they will be added to your jar on build
+    // These are some constructorpatches:
+    //    libDepends group: 'com.google.guava', name: 'guava', version: '31.1-jre'
+    //    libDepends files("path/to/library/jar.jar")
 }
 
-
-
-// ===== Misc ===== //
-
-modInfo.each {entry -> project.ext[entry.key] = entry.value }
-def normalizedName = modInfo.modName.replaceAll('[^\\p{Alnum}()$\\[\\].]', "_")
-
-// Name of the jar
-def jarName = "$normalizedName-${modInfo.gameVersion}-${modInfo.modVersion}"
-def buildLocation = "build/jar"
-
-sourceSets.main.output.resourcesDir = file("build/mod/resources/")
-sourceSets.main.java.outputDir = file("build/mod/")
-
-group modInfo.modID
-version modInfo.modVersion
-setSourceCompatibility JavaVersion.VERSION_1_8
-setTargetCompatibility JavaVersion.VERSION_1_8
-
-compileJava.options.encoding = "UTF-8"
-
-
-
-// ===== Tasks ===== //
-
-task generateModInfo {
-    doLast {
-        def outputFile = file("${sourceSets.main.java.outputDir}/mod.info")
-        def deps = modInfo.hasProperty('dependencies') ? modInfo.dependencies : []
-        def optDeps = modInfo.hasProperty('optionalDependencies') ? modInfo.optionalDependencies : []
-        def isClientSide = modInfo.hasProperty('clientside') && modInfo.clientside
-        outputFile.text = """{
-        |    id = ${modInfo.modID},
-        |    name = ${modInfo.modName},
-        |    version = ${modInfo.modVersion},
-        |    gameVersion = ${modInfo.gameVersion},
-        |    description = ${modInfo.modDescription},
-        |    author = ${modInfo.author},
-        |    clientside = ${isClientSide},
-        |    dependencies = [${deps.join(", ")}],
-        |    optionalDependencies = [${optDeps.join(", ")}],
-        |}""".stripMargin()
-    }
-}
-
-task buildModJar(type: Jar) {
-    group "necesse"
-    description "Generates the mod jar into the build folder"
-    dependsOn classes, generateModInfo
-
-    doFirst {
-        // Remove previous versions in the output development folder
-        delete fileTree(dir: buildLocation, include: '**.jar')
-    }
-
-    archiveName "${jarName}.jar"
-    destinationDir file(buildLocation)
-
-    duplicatesStrategy DuplicatesStrategy.EXCLUDE
-    from sourceSets.main.java.outputDir
-    // Also grab implementation dependencies and package them into the jar
-    from {
-        configurations.runtimeClasspath.files.collect {it.isDirectory() ? it : zipTree(it)}
-    }.exclude 'META-INF/**'
-}
-
-task createAppID {
+tasks.register('createAppID') {
     group "necesse"
     description "Creates steam_appid.txt file"
 
     doLast {
-        new File("steam_appid.txt").text = "1169040"
+        file("steam_appid.txt").text = "1169040"
     }
 }
 
-task decompileToSources(type: JavaExec) {
-    onlyIf { useDecompiledSources }
-    outputs.upToDateWhen {
-        ant.checksum file: "$gameDirectory/Necesse.jar", todir: gameDirectory, fileext: '.sum'
-        def upToDate = file("$gameDirectory/Necesse.jar.sum").exists() &&
-                file("$decompileDir/origin.jar.sum").exists() &&
-                file("$gameDirectory/Necesse.jar.sum").text == file("$decompileDir/origin.jar.sum").text
-        if (upToDate) { delete file("$gameDirectory/Necesse.jar.sum") }
-        return upToDate
-    }
-    doFirst { mkdir decompileDir }
-    doLast {
-        ant.move file: "$gameDirectory/Necesse.jar.sum", tofile: "$decompileDir/origin.jar.sum", overwrite: true
-        ant.move file: "$decompileDir/Necesse.jar", tofile: "$decompileDir/Necesse-sources.jar"
-    }
+tasks.register('createModInfoFile', JavaExec) {
+    group "necesse"
+    description "Creates the mod info file"
 
-    classpath configurations.runnable
+    classpath = files(gameDirectory + "/Necesse.jar")
 
-    def banner = "/**\n  * Decompiled Necesse.jar sources for modding use only. Redistribution is strictly prohibited.\n  */\n\n"
-    // decompiler preferences referred from https://github.com/JetBrains/intellij-community/blob/master/plugins/java-decompiler/plugin/src/org/jetbrains/java/decompiler/IdeaDecompiler.kt
-    main 'org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler'
-    args '-hdc=0', '-dgs=1', '-rsy=1', '-rbr=1', '-nls=1', "-ban=$banner", '-mpm=60', '-ind=    ', '-iib=1', '-vac=1', '-ren=1', "$gameDirectory/Necesse.jar", decompileDir
+    main = "CreateModInfoFile"
+    args "-file", "${modBuildLocation}/mod.info",
+            "-id", "${project.ext.modID}",
+            "-name", "${project.ext.modName}",
+            "-version", "${project.ext.modVersion}",
+            "-gameVersion", "${project.ext.gameVersion}",
+            "-description", "${project.ext.modDescription}",
+            "-author", "${project.ext.author}",
+            "-clientside", "${project.ext.clientside}",
+            "-dependencies", project.ext.has("modDependencies") ? "[" + project.ext.modDependencies.join(", ") + "]" : "",
+            "-optionalDependencies", project.ext.has("modOptionalDependencies") ? "[" + project.ext.modOptionalDependencies.join(", ") + "]" : ""
 }
+// Makes compiling also create mod info file
+classes.dependsOn("createModInfoFile")
 
-task runClient(type: JavaExec) {
+tasks.register('runClient', JavaExec) {
     group "necesse"
     description "Run client with current mod"
-    dependsOn buildModJar, createAppID
+    dependsOn "buildModJar", "createAppID"
 
-    classpath files("$gameDirectory/Necesse.jar")
+    classpath = files(gameDirectory + "/Necesse.jar")
 
-    main "StartClient"
-    jvmArgs "-Xms512m", "-Xmx3G", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20", "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=32M"
-    args "-mod \"${buildLocation}\""
+    main = "StartClient"
+    jvmArgs "-Xms512m", "-Xmx4G", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20", "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=32M"
+    args "-dev", "-mod \"${jarBuildLocation}\""
 }
 
-task runDevClient(type: JavaExec) {
+tasks.register('runDevClient', JavaExec) {
     group "necesse"
     description "Run client with current mod"
-    dependsOn buildModJar, createAppID
+    dependsOn "buildModJar", "createAppID"
 
-    classpath files("$gameDirectory/Necesse.jar")
+    classpath = files(gameDirectory + "/Necesse.jar")
 
-    main "StartClient"
-    jvmArgs "-Xms512m", "-Xmx3G", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20", "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=32M"
-    args "-dev 1", "-mod \"${buildLocation}\""
+    main = "StartClient"
+    jvmArgs "-Xms512m", "-Xmx4G", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20", "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=32M"
+    args "-dev 1", "-mod \"${jarBuildLocation}\""
 }
 
-task runServer(type: JavaExec) {
+tasks.register('runServer', JavaExec) {
     group "necesse"
     description "Run server with current mod"
-    dependsOn buildModJar
+    dependsOn "buildModJar"
 
-    classpath files("$gameDirectory/Server.jar")
+    classpath = files(gameDirectory + "/Server.jar")
 
-    main "StartServer"
-    jvmArgs "-Xms512m", "-Xmx3G", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20", "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=32M"
-    args "-mod \"${buildLocation}\""
+    main = "StartServer"
+    jvmArgs "-Xms512m", "-Xmx4G", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20", "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=32M"
+    args "-dev -mod \"${jarBuildLocation}\""
+}
+
+tasks.register('buildModJar', Jar) {
+    group "necesse"
+    description "Generates the mod jar into the build folder"
+    dependsOn "classes"
+
+    doFirst {
+        fileTree(dir: jarBuildLocation).exclude("${jarName}.jar").visit { FileVisitDetails details ->
+            delete details.file
+        }
+    }
+
+    // Add mod output
+    from sourceSets.main.java.destinationDirectory
+    // Add the dependencies
+    from configurations.libDepends.collect { it.isDirectory() ? it : zipTree(it) }
+
+    archiveFileName.set("${jarName}.jar")
+    destinationDirectory.set(file(jarBuildLocation))
 }
