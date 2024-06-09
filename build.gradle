@@ -7,10 +7,10 @@ plugins {
 
 project.ext.modID = "goliath.hardcorelite" // The unique id of your mod. Must be all lowercase and cannot use special characters.
 project.ext.modName = "Hardcore Lite" // The display name of your mod.
-project.ext.modVersion = "1.1" // Your current builds version. Must follow the xx.xx... format.
-project.ext.gameVersion = "0.25.0" // The target game version.
+project.ext.modVersion = "1.1.1" // Your current builds version. Must follow the xx.xx... format.
+project.ext.gameVersion = "0.25.1" // The target game version.
 project.ext.modDescription = "Adds a new death penalty." // Short description of what your mod is.
-project.ext.author = "GoliathX211; Deadly990; butterflysky" // Your name
+project.ext.author = "butterflysky; GoliathX211; Deadly990" // Your name
 
 /**
  * When setting clientside to true, it means servers do not need this mod for clients to connect and vice versa.
