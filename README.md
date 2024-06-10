@@ -10,6 +10,9 @@ Similarly, if the player owned a team, they will continue to own that team when 
 
 # Changelog
 
+Version 1.1.1:
+- Bumped version for Necesse 0.25.1
+  
 Version 1.1.0:
 - Added support for team ownership and membership preservation
 - Updated for Necesse 0.25
